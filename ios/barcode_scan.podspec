@@ -14,6 +14,8 @@ A new flutter plugin project.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
+  s.resource = "Assets/Resources.bundle"
+#  s.resources = ['Assets/*.png']
   s.dependency 'Flutter'
   s.dependency 'MTBBarcodeScanner'
   s.dependency 'SwiftProtobuf'

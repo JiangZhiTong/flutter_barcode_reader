@@ -52,6 +52,7 @@ public class SwiftBarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerView
         let navigationController = UINavigationController(rootViewController: scannerViewController)
         navigationController.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController.navigationBar.shadowImage = UIImage()
+        navigationController.navigationBar.tintColor = .white
         if #available(iOS 13.0, *) {
             navigationController.modalPresentationStyle = .fullScreen
         }
