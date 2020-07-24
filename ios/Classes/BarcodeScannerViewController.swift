@@ -18,6 +18,8 @@ class BarcodeScannerViewController: UIViewController {
       "cancel" : "Cancel",
       "flash_on" : "Flash on",
       "flash_off" : "Flash off",
+      "flash_enable" : "1",
+      "title": "扫描条码",
     ]
     $0.useCamera = -1 // Default camera
     $0.autoEnableFlash = false
@@ -73,10 +75,42 @@ class BarcodeScannerViewController: UIViewController {
                                   previewView: previewView
       )
     }
-    navigationItem.leftBarButtonItem = UIBarButtonItem(title: config.strings["cancel"],
-                                                        style: .plain,
-                                                        target: self,
-                                                        action: #selector(cancel)
+    let lab = UILabel()
+    lab.text = config.strings["title"]
+    lab.textAlignment = .center
+    lab.textColor = .white
+    if #available(iOS 8.2, *) {
+        lab.font = .systemFont(ofSize: 18, weight: .semibold)
+    } else {
+        lab.font = .systemFont(ofSize: 18)
+    }
+    self.navigationItem.titleView = lab;
+    
+    let imageView = UIView(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
+    // 线的路径
+    let polygonPath = UIBezierPath()
+    let backImgSize: CGFloat = 8
+    polygonPath.move(to: CGPoint(x: 15 + backImgSize, y: imageView.bounds.height * 0.5 - backImgSize))
+    polygonPath.addLine(to: CGPoint(x: 15, y: imageView.bounds.height * 0.5))
+    polygonPath.addLine(to: CGPoint(x: 15 + backImgSize, y: imageView.bounds.height * 0.5 + backImgSize))
+    
+    let polygonLayer = CAShapeLayer()
+    polygonLayer.lineWidth = backImgSize * 0.3
+    polygonLayer.strokeColor = UIColor.white.cgColor
+    polygonLayer.path = polygonPath.cgPath
+    polygonLayer.fillColor = nil; // 默认为blackColor
+    imageView.layer.addSublayer(polygonLayer)
+    
+    imageView.addGestureRecognizer(UITapGestureRecognizer(target:self, action: #selector(cancel)))
+    
+    navigationItem.leftBarButtonItem = UIBarButtonItem(
+//        image:UIImage(contentsOfFile: Bundle.main.path(forResource: "Assets/fwz_navi_back@3x.png", ofType: nil) ?? ""),
+//        image: UIImage(named: "fwz_navi_back@3x.png"),
+        customView: imageView
+        //title: config.strings["cancel"],
+//                                                        style: .plain,
+//                                                        target: self,
+//                                                        action: #selector(cancel)
     )
     updateToggleFlashButton()
   }
@@ -173,7 +207,7 @@ class BarcodeScannerViewController: UIViewController {
   }
   
   private func updateToggleFlashButton() {
-    if !hasTorch {
+    if !hasTorch || config.strings["flash_enable"] != "1" {
       return
     }
     

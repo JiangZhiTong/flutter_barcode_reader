@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import SwiftProtobuf
 import AVFoundation
+import MTBBarcodeScanner
 
 public class SwiftBarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerViewControllerDelegate {
     
@@ -19,8 +20,24 @@ public class SwiftBarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerView
         self.result = result
         if ("scan" == call.method) {
             let configuration: Configuration? = getPayload(call: call)
-            showBarcodeView(config: configuration)}
-        else if ("numberOfCameras" == call.method) {
+            MTBBarcodeScanner.requestCameraPermission { success in
+                if success {
+                    self.showBarcodeView(config: configuration)
+                } else {
+                    let alert = UIAlertController(title: "相机权限未打开", message: "我们需要您的相机权限才能进行扫码识别,是否需要进入设置打开相机权限？", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction.init(title: "取消", style: .cancel, handler: nil))
+                    alert.addAction(UIAlertAction.init(title: "确定", style: .default, handler: {_ in
+                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                        if #available(iOS 10.0, *) {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        } else {
+                            UIApplication.shared.openURL(url)
+                        }
+                    }))
+                    self.hostViewController?.present(alert, animated: true, completion: nil)
+                }
+            }
+        } else if ("numberOfCameras" == call.method) {
             result(AVCaptureDevice.devices(for: .video).count)
         } else if ("requestCameraPermission" == call.method) {
             result(false)
@@ -33,7 +50,8 @@ public class SwiftBarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerView
         let scannerViewController = BarcodeScannerViewController()
         
         let navigationController = UINavigationController(rootViewController: scannerViewController)
-        
+        navigationController.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController.navigationBar.shadowImage = UIImage()
         if #available(iOS 13.0, *) {
             navigationController.modalPresentationStyle = .fullScreen
         }
@@ -59,11 +77,11 @@ public class SwiftBarcodeScanPlugin: NSObject, FlutterPlugin, BarcodeScannerView
     }
     
     func didScanBarcodeWithResult(_ controller: BarcodeScannerViewController?, scanResult: ScanResult) {
-      do {
-        result?(try scanResult.serializedData())
-      } catch {
-        result?(FlutterError(code: "err_serialize", message: "Failed to serialize the result", details: nil))
-      }
+        do {
+            result?(try scanResult.serializedData())
+        } catch {
+            result?(FlutterError(code: "err_serialize", message: "Failed to serialize the result", details: nil))
+        }
     }
     
     func didFailWithErrorCode(_ controller: BarcodeScannerViewController?, errorCode: String) {
