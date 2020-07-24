@@ -247,7 +247,7 @@ class _MyAppState extends State<_MyApp> {
           "cancel": _cancelController.text,
           "flash_on": _flashOnController.text,
           "flash_off": _flashOffController.text,
-//          "flash_enable" : "1",
+          "flash_enable" : "1",
           "title": "扫描条码",
         },
         restrictFormat: selectedFormats,
