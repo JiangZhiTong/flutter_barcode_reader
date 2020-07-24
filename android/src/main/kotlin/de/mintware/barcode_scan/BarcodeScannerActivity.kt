@@ -3,20 +3,23 @@ package de.mintware.barcode_scan
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
+import android.widget.TextView
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
-    init {
-        title = ""
-    }
-
     private lateinit var config: Protos.Configuration
     private var scannerView: ZXingScannerView? = null
+    private var ivBack : ImageView? = null
+    private var tvTitle : TextView? = null
+    private var tvLight : TextView? = null
 
     companion object {
         const val TOGGLE_FLASH = 200
@@ -46,14 +49,45 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
         super.onCreate(savedInstanceState)
 
         config = Protos.Configuration.parseFrom(intent.extras!!.getByteArray(EXTRA_CONFIG))
+
+        setupScannerView()
+        scannerView?.setResultHandler(this)
     }
 
     private fun setupScannerView() {
-        if (scannerView != null) {
-            return
+        setContentView(R.layout.activity_scan)
+        ivBack = findViewById<ImageView>(R.id.ivBack)
+        tvTitle = findViewById<TextView>(R.id.tvTitle)
+        tvLight = findViewById<TextView>(R.id.tvLight)
+        scannerView = findViewById<ZXingAutofocusScannerView>(R.id.scannerView)
+
+        ivBack?.setOnClickListener{
+            finish()
         }
 
-        scannerView = ZXingAutofocusScannerView(this).apply {
+        val title = config.stringsMap["title"]
+        if (!TextUtils.isEmpty(title)){
+            tvTitle?.text = title
+        }
+
+        val flashEnable = config.stringsMap["flash_enable"]
+        if (TextUtils.equals(flashEnable, "1")) {
+            var buttonText = config.stringsMap["flash_on"]
+            if (scannerView?.flash == true) {
+                buttonText = config.stringsMap["flash_off"]
+            }
+            tvLight?.text = buttonText
+            tvLight?.setOnClickListener {
+                scannerView?.toggleFlash()
+                var buttonText = config.stringsMap["flash_on"]
+                if (scannerView?.flash == true) {
+                    buttonText = config.stringsMap["flash_off"]
+                }
+                tvLight?.text = buttonText
+            }
+        }
+
+        scannerView?.apply {
             setAutoFocus(config.android.useAutoFocus)
             val restrictedFormats = mapRestrictedBarcodeTypes()
             if (restrictedFormats.isNotEmpty()) {
@@ -64,41 +98,40 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
             setAspectTolerance(config.android.aspectTolerance.toFloat())
             if (config.autoEnableFlash) {
                 flash = config.autoEnableFlash
-                invalidateOptionsMenu()
+//                invalidateOptionsMenu()
             }
         }
 
-        setContentView(scannerView)
     }
 
     // region AppBar menu
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        var buttonText = config.stringsMap["flash_on"]
-        if (scannerView?.flash == true) {
-            buttonText = config.stringsMap["flash_off"]
-        }
-        val flashButton = menu.add(0, TOGGLE_FLASH, 0, buttonText)
-        flashButton.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-
-        val cancelButton = menu.add(0, CANCEL, 0, config.stringsMap["cancel"])
-        cancelButton.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == TOGGLE_FLASH) {
-            scannerView?.toggleFlash()
-            this.invalidateOptionsMenu()
-            return true
-        }
-        if (item.itemId == CANCEL) {
-            setResult(RESULT_CANCELED)
-            finish()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//        var buttonText = config.stringsMap["flash_on"]
+//        if (scannerView?.flash == true) {
+//            buttonText = config.stringsMap["flash_off"]
+//        }
+//        val flashButton = menu.add(0, TOGGLE_FLASH, 0, buttonText)
+//        flashButton.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+//
+//        val cancelButton = menu.add(0, CANCEL, 0, config.stringsMap["cancel"])
+//        cancelButton.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+//
+//        return super.onCreateOptionsMenu(menu)
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        if (item.itemId == TOGGLE_FLASH) {
+//            scannerView?.toggleFlash()
+//            this.invalidateOptionsMenu()
+//            return true
+//        }
+//        if (item.itemId == CANCEL) {
+//            setResult(RESULT_CANCELED)
+//            finish()
+//            return true
+//        }
+//        return super.onOptionsItemSelected(item)
+//    }
 
     override fun onPause() {
         super.onPause()
@@ -107,8 +140,6 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     override fun onResume() {
         super.onResume()
-        setupScannerView()
-        scannerView?.setResultHandler(this)
         if (config.useCamera > -1) {
             scannerView?.startCamera(config.useCamera)
         } else {
