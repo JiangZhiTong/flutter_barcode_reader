@@ -1,10 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="de.mintware.barcode_scan">
+    package="de.mintware.barcode_scan">
 
-  <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
-  <application>
-    <activity android:name="de.mintware.barcode_scan.BarcodeScannerActivity"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-  </application>
+    <application>
+        <activity android:name=".BarCodeScanPerfectActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+        <activity
+            android:name=".BarcodeScannerActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+    </application>
+
 </manifest>
