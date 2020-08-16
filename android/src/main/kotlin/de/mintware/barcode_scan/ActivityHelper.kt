@@ -34,8 +34,8 @@ class ActivityHelper(private var applicationContext: Context?,
 
         activityResultMap[REQ_START_SCAN] = ScanResultHandler(result)
 
-        val intent = Intent(applicationContext, BarcodeScannerActivity::class.java)
-//        val intent = Intent(applicationContext, BarCodeScanPerfectActivity::class.java)
+//        val intent = Intent(applicationContext, BarcodeScannerActivity::class.java)
+        val intent = Intent(applicationContext, BarCodeScanPerfectActivity::class.java)
         intent.putExtra(BarcodeScannerActivity.EXTRA_CONFIG, config.toByteArray())
         activity!!.startActivityForResult(intent, REQ_START_SCAN)
     }
